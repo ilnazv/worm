@@ -30,34 +30,15 @@ export class Game {
   }
 
   private async setSnackPosition(): Promise<Position> {
+    const canvasSizeInBlocks = CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize);
     let newSnackPosition = {
-      posX: Math.floor(
-        Math.random() *
-          CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize)
-            .width
-      ),
-      posY: Math.floor(
-        Math.random() *
-          CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize)
-            .height
-      )
+      posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
+      posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
     };
-    while (
-      this.worms.some(x =>
-        x.body.some(y => positionsEqual(y, newSnackPosition))
-      )
-    ) {
+    while (this.worms.some(x => x.body.some(y => positionsEqual(y, newSnackPosition)))) {
       newSnackPosition = {
-        posX: Math.floor(
-          Math.random() *
-            CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize)
-              .width
-        ),
-        posY: Math.floor(
-          Math.random() *
-            CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize)
-              .height
-        )
+        posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
+        posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
       };
     }
     return newSnackPosition;
@@ -89,10 +70,7 @@ export class Game {
   }
 
   private async checkSnack(worm: Worm, index: number): Promise<void> {
-    const wormApproachedSnack = positionsEqual(
-      this.snacks[index],
-      worm.headPosition
-    );
+    const wormApproachedSnack = positionsEqual(this.snacks[index], worm.headPosition);
     if (wormApproachedSnack) {
       worm.increaseSize();
       this.snacks[index] = await this.setSnackPosition();
@@ -113,34 +91,19 @@ export class Game {
   }
 
   public draw(): void {
-    this.ctx.clearRect(
-      0,
-      0,
-      this.canvasSizeinPx.width,
-      this.canvasSizeinPx.height
-    );
+    this.ctx.clearRect(0, 0, this.canvasSizeinPx.width, this.canvasSizeinPx.height);
     for (let wI = 0; wI < this.worms.length; wI++) {
       const worm = this.worms[wI];
       for (let index = 0; index < worm.body.length; index++) {
         const element = worm.body[index];
         this.ctx.fillStyle = "black";
-        this.ctx.fillRect(
-          element.posX * this.blockSize,
-          element.posY * this.blockSize,
-          this.blockSize,
-          this.blockSize
-        );
+        this.ctx.fillRect(element.posX * this.blockSize, element.posY * this.blockSize, this.blockSize, this.blockSize);
       }
     }
     for (let sI = 0; sI < this.snacks.length; sI++) {
       const snack = this.snacks[sI];
       this.ctx.fillStyle = "green";
-      this.ctx.fillRect(
-        snack.posX * this.blockSize,
-        snack.posY * this.blockSize,
-        this.blockSize,
-        this.blockSize
-      );
+      this.ctx.fillRect(snack.posX * this.blockSize, snack.posY * this.blockSize, this.blockSize, this.blockSize);
     }
   }
 
@@ -193,12 +156,9 @@ export class Game {
 
   private checkMove(position: Position): boolean {
     if (
-      CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize)
-        .height <
-        position.posY + this.step ||
+      CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).height < position.posY + this.step ||
       position.posY < 0 ||
-      CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).width <
-        position.posX + this.step ||
+      CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).width < position.posX + this.step ||
       position.posX < 0
     ) {
       return false;

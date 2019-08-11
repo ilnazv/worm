@@ -5,7 +5,7 @@ import GameShell from './components/GameShell/GameShell';
 const App: React.FC = () => {
   return (
     <div className="App">
-        <GameShell></GameShell>
+        <GameShell canvasSize={{ width: 500, height: 800 }}></GameShell>
     </div>
   );
 }

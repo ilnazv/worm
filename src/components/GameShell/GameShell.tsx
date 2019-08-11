@@ -1,11 +1,23 @@
 import React from "react";
 
-export default class GameShell extends React.Component<{}, { tick: number }> {
+interface GameShellProps {
+  canvasSize: CanvasSize;
+}
+
+interface CanvasSize {
+  width: number;
+  height: number;
+}
+
+export default class GameShell extends React.Component<
+  GameShellProps,
+  { tick: number }
+> {
   private game?: Game;
   private canvasRef: any;
   private ctx?: CanvasRenderingContext2D;
 
-  constructor(props: any) {
+  constructor(props: GameShellProps) {
     super(props);
     this.canvasRef = React.createRef();
 
@@ -18,24 +30,23 @@ export default class GameShell extends React.Component<{}, { tick: number }> {
     const canvas: HTMLCanvasElement = this.canvasRef.current;
     this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.ctx.fillStyle = "green";
-    this.game = new Game(this.ctx);
+    this.game = new Game(this.ctx, this.props.canvasSize);
     this.game.start();
     window.addEventListener("keydown", (event: KeyboardEvent) => {
       if (this.game) {
         this.game.changeDirection(event.keyCode);
       }
-      this.setState({
-        tick: this.state.tick + 1
-      });
     });
   }
 
   public render(): JSX.Element {
     return (
-      <>
-        GameShell:
-        <canvas ref={this.canvasRef} width={640} height={425} />;
-      </>
+      <canvas
+        ref={this.canvasRef}
+        width={this.props.canvasSize.width}
+        height={this.props.canvasSize.height}
+        style={{ border: "1px solid" }}
+      />
     );
   }
 }
@@ -59,17 +70,19 @@ class Game {
   private direction: Keys = Keys.DOWN;
 
   private position: Position = {
-    posX: 0,
-    posY: 0
+    posX: 10,
+    posY: 10
   };
   private step = 10;
 
-  constructor(private ctx: CanvasRenderingContext2D) {}
+  constructor(
+    private ctx: CanvasRenderingContext2D,
+    private canvasSize: CanvasSize
+  ) {}
 
   public start(): void {
     this.intervalId = setInterval(() => {
       this.run();
-      this.draw();
     }, 1000 / this.fps);
   }
 
@@ -81,27 +94,22 @@ class Game {
 
   private run(): void {
     this.tick++;
-    switch (this.direction) {
-      case Keys.DOWN:
-        this.moveDown();
-        break;
-      case Keys.UP:
-        this.moveUp();
-        break;
-      case Keys.LEFT:
-        this.moveLeft();
-        break;
-      case Keys.RIGHT:
-        this.moveRight();
-        break;
-      default:
-        console.log("no action assigned");
-        break;
+    if (this.move()) {
+      this.draw();
     }
   }
 
+  private move(): boolean {
+    const newPosition = this.moveTowards(this.direction);
+    if (this.checkMove(newPosition)) {
+      this.position = newPosition;
+      return true;
+    }
+    return false;
+  }
+
   public draw(): void {
-    this.ctx.clearRect(0, 0, 640, 425);
+    this.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
     this.ctx.fillRect(this.position.posX, this.position.posY, 10, 10);
   }
 
@@ -109,19 +117,43 @@ class Game {
     this.direction = key;
   }
 
-  private moveUp(): void {
-    this.position.posY -= this.step;
+  private moveTowards(key: Keys): Position {
+    switch (key) {
+      case Keys.UP:
+        return {
+          posY: this.position.posY - this.step,
+          posX: this.position.posX
+        };
+      case Keys.DOWN:
+        return {
+          posY: this.position.posY + this.step,
+          posX: this.position.posX
+        };
+      case Keys.LEFT:
+        return {
+          posY: this.position.posY,
+          posX: this.position.posX - this.step
+        };
+      case Keys.RIGHT:
+        return {
+          posY: this.position.posY,
+          posX: this.position.posX + this.step
+        };
+      default:
+        console.log("no action assigned");
+        return this.position;
+    }
   }
 
-  private moveDown(): void {
-    this.position.posY += this.step;
-  }
-
-  private moveLeft(): void {
-    this.position.posX -= this.step;
-  }
-
-  private moveRight(): void {
-    this.position.posX += this.step;
+  private checkMove(position: Position): boolean {
+    if (
+      this.canvasSize.height < position.posY + this.step ||
+      position.posY < 0 ||
+      this.canvasSize.width < position.posX + this.step ||
+      position.posX < 0
+    ) {
+      return false;
+    }
+    return true;
   }
 }

@@ -3,6 +3,13 @@ export interface Position {
   posY: number;
 }
 
+export const getRandomPosition = (canvasSizeInBlocks: CanvasSize): Position => {
+  return {
+    posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
+    posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
+  };
+};
+
 export const positionsEqual = (left: Position, right: Position): boolean => {
   return left.posX === right.posX && left.posY === right.posY;
 };
@@ -33,6 +40,8 @@ export class Worm {
     this.size++;
   }
 
+  public dead = false;
+
   constructor(
     private _headPosition: Position = { posX: 0, posY: 0 },
     private size: number = 3,
@@ -44,7 +53,7 @@ export class Worm {
 
 export class CanvasSize {
   constructor(public width: number, public height: number) {}
-  
+
   public static canvasSizeInBlocks(canvas: CanvasSize, blockSize: number): CanvasSize {
     return {
       width: canvas.width / blockSize,

@@ -1,9 +1,9 @@
-import { Worm, CanvasSize, positionsEqual, Keys, Position } from "./Models";
+import { Worm, CanvasSize, positionsEqual, Keys, Position, getRandomPosition } from "./Models";
 
 export class Game {
   private intervalId?: NodeJS.Timeout;
   private tick = 0;
-  private fps = 50;
+  private fps = 10;
   private snacks: Position[] = [];
 
   private worms: Worm[] = [];
@@ -18,7 +18,8 @@ export class Game {
     snacksNumber = 1
   ) {
     for (let index = 0; index < wormsNumber; index++) {
-      this.worms.push(new Worm());
+      const canvasSizeInBlocks = CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize);
+      this.worms.push(new Worm(getRandomPosition(canvasSizeInBlocks)));
     }
     this.initSnacks(snacksNumber);
   }
@@ -31,15 +32,9 @@ export class Game {
 
   private async setSnackPosition(): Promise<Position> {
     const canvasSizeInBlocks = CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize);
-    let newSnackPosition = {
-      posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
-      posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
-    };
+    let newSnackPosition = getRandomPosition(canvasSizeInBlocks);
     while (this.worms.some(x => x.body.some(y => positionsEqual(y, newSnackPosition)))) {
-      newSnackPosition = {
-        posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
-        posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
-      };
+      newSnackPosition = getRandomPosition(canvasSizeInBlocks);
     }
     return newSnackPosition;
   }
@@ -60,7 +55,10 @@ export class Game {
     this.tick++;
     for (let index = 0; index < this.worms.length; index++) {
       const worm = this.worms[index];
-      this.move(worm);
+      const possibleMove = this.move(worm);
+      if (!possibleMove) {
+        worm.dead = true;
+      }
       if (random) {
         const key = Keys.LEFT + Math.floor(Math.random() * 4);
         this.changeDirection(key, worm);
@@ -96,7 +94,7 @@ export class Game {
       const worm = this.worms[wI];
       for (let index = 0; index < worm.body.length; index++) {
         const element = worm.body[index];
-        this.ctx.fillStyle = "black";
+        this.ctx.fillStyle = worm.dead ? "red" : "black";
         this.ctx.fillRect(element.posX * this.blockSize, element.posY * this.blockSize, this.blockSize, this.blockSize);
       }
     }

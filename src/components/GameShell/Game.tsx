@@ -10,6 +10,8 @@ export class Game {
 
   private step = 1;
 
+  private survivorMode = false;
+
   constructor(
     private ctx: CanvasRenderingContext2D,
     private canvasSizeinPx: CanvasSize,
@@ -22,6 +24,7 @@ export class Game {
       this.worms.push(new Worm(getRandomPosition(canvasSizeInBlocks)));
     }
     this.initSnacks(snacksNumber);
+    this.survivorMode = wormsNumber > 1;
   }
 
   private async initSnacks(snacksNumber: number): Promise<void> {
@@ -53,37 +56,51 @@ export class Game {
 
   private run(random: boolean): void {
     this.tick++;
-    for (let index = 0; index < this.worms.length; index++) {
-      const worm = this.worms[index];
-      const possibleMove = this.move(worm);
-      if (!possibleMove) {
-        worm.dead = true;
-      }
-      if (random) {
-        const key = Keys.LEFT + Math.floor(Math.random() * 4);
-        this.changeDirection(key, worm);
-      }
-    }
+    this.worms
+      .filter(x => !x.dead)
+      .forEach(worm => {
+        let possibleMove = this.move(worm);
+        if (random) {
+          let tryCounter = 0;
+          while (!possibleMove) {
+            const key = Keys.LEFT + Math.floor(Math.random() * 4);
+            this.changeDirection(key, worm);
+            possibleMove = this.move(worm);
+            tryCounter++;
+            if (tryCounter >= 100) {
+              worm.dead = true;
+            }
+          }
+          const key = Keys.LEFT + Math.floor(Math.random() * 4);
+          this.changeDirection(key, worm);
+        }
+      });
     this.draw();
-    if (this.worms.filter(x => !x.dead).length <= 1) {
+    if (this.survivorMode && this.worms.filter(x => !x.dead).length <= 1) {
       this.stop();
     }
   }
 
-  private async checkSnack(worm: Worm, index: number): Promise<void> {
-    const wormApproachedSnack = positionsEqual(this.snacks[index], worm.headPosition);
+  private async checkSnack(worm: Worm, index: number, headPosition: Position): Promise<void> {
+    const wormApproachedSnack = positionsEqual(this.snacks[index], headPosition);
     if (wormApproachedSnack) {
       worm.increaseSize();
       this.snacks[index] = await this.setSnackPosition();
     }
   }
 
+  private checkAnotherWorm(worm: Worm, headPosition: Position): void {
+    const wormApproachedAnotherWorm = this.worms.some(x => x.body.some(y => positionsEqual(y, headPosition)));
+    if (wormApproachedAnotherWorm) {
+    }
+  }
+
   private move(worm: Worm): boolean {
-    const newPosition = this.moveTowards(worm.direction, worm);
-    const possibleMove = this.checkMove(newPosition);
+    const newPosition = this.tryToMoveTowards(worm.direction, worm);
+    const possibleMove = this.checkNextMove(newPosition);
     if (possibleMove) {
       for (let index = 0; index < this.snacks.length; index++) {
-        this.checkSnack(worm, index);
+        this.checkSnack(worm, index, newPosition);
       }
       worm.headPosition = newPosition;
       return possibleMove;
@@ -94,11 +111,11 @@ export class Game {
   public draw(): void {
     this.ctx.clearRect(0, 0, this.canvasSizeinPx.width, this.canvasSizeinPx.height);
     this.worms
-      .filter(x => !x.dead)
+      // .filter(x => !x.dead)
       .forEach(worm => {
         for (let index = 0; index < worm.body.length; index++) {
           const element = worm.body[index];
-          this.ctx.fillStyle = "black";
+          this.ctx.fillStyle = worm.dead ? "burlywood" : "black";
           this.ctx.fillRect(
             element.posX * this.blockSize,
             element.posY * this.blockSize,
@@ -133,27 +150,27 @@ export class Game {
     worm.direction = key;
   }
 
-  private moveTowards(key: Keys, worm: Worm): Position {
+  private tryToMoveTowards(key: Keys, worm: Worm): Position {
     switch (key) {
       case Keys.UP:
         return {
-          posY: worm.headPosition.posY - this.step,
-          posX: worm.headPosition.posX
+          posX: worm.headPosition.posX,
+          posY: worm.headPosition.posY - this.step
         };
       case Keys.DOWN:
         return {
-          posY: worm.headPosition.posY + this.step,
-          posX: worm.headPosition.posX
+          posX: worm.headPosition.posX,
+          posY: worm.headPosition.posY + this.step
         };
       case Keys.LEFT:
         return {
-          posY: worm.headPosition.posY,
-          posX: worm.headPosition.posX - this.step
+          posX: worm.headPosition.posX - this.step,
+          posY: worm.headPosition.posY
         };
       case Keys.RIGHT:
         return {
-          posY: worm.headPosition.posY,
-          posX: worm.headPosition.posX + this.step
+          posX: worm.headPosition.posX + this.step,
+          posY: worm.headPosition.posY
         };
       default:
         console.log("no action handler for key: ", key);
@@ -161,13 +178,19 @@ export class Game {
     }
   }
 
-  private checkMove(position: Position): boolean {
+  private checkNextMove(position: Position): boolean {
     if (
       CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).height < position.posY + this.step ||
       position.posY < 0 ||
       CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).width < position.posX + this.step ||
       position.posX < 0
     ) {
+      return false;
+    }
+    const wormApproachedAnotherWorm = this.worms
+      .filter(x => !x.dead)
+      .some(x => x.body.some(y => positionsEqual(y, position)));
+    if (wormApproachedAnotherWorm) {
       return false;
     }
     return true;

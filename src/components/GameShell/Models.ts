@@ -36,8 +36,8 @@ export class Worm {
 
   public body: Position[] = [];
 
-  public increaseSize(): void {
-    this.size++;
+  public increaseSize(value: number = 1): void {
+    this.size = this.size + value;
   }
 
   public dead = false;

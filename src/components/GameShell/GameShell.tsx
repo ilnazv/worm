@@ -14,7 +14,7 @@ export default class GameShell extends React.Component<
   { tick: number }
 > {
   private game?: Game;
-  private canvasRef: any;
+  private canvasRef: React.RefObject<HTMLCanvasElement>;
   private ctx?: CanvasRenderingContext2D;
 
   constructor(props: GameShellProps) {
@@ -27,10 +27,10 @@ export default class GameShell extends React.Component<
   }
 
   componentDidMount(): void {
-    const canvas: HTMLCanvasElement = this.canvasRef.current;
+    const canvas = this.canvasRef.current as HTMLCanvasElement;
     this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.ctx.fillStyle = "green";
-    this.game = new Game(this.ctx, this.props.canvasSize);
+    this.game = new Game(this.ctx, this.props.canvasSize, 50);
     this.game.start();
     window.addEventListener("keydown", (event: KeyboardEvent) => {
       if (this.game) {
@@ -68,16 +68,25 @@ class Game {
   private tick = 0;
   private fps = 5;
   private direction: Keys = Keys.DOWN;
+  private wormSize = 1;
 
   private position: Position = {
-    posX: 10,
-    posY: 10
+    posX: 0,
+    posY: 0
   };
-  private step = 10;
+  private step = 1;
+
+  private get canvasSizeInBlocks(): CanvasSize {
+    return {
+      width: this.canvasSizeinPx.width / this.blockSize,
+      height: this.canvasSizeinPx.height / this.blockSize,
+    }
+  }
 
   constructor(
     private ctx: CanvasRenderingContext2D,
-    private canvasSize: CanvasSize
+    private canvasSizeinPx: CanvasSize,
+    private blockSize = 100
   ) {}
 
   public start(): void {
@@ -101,19 +110,23 @@ class Game {
 
   private move(): boolean {
     const newPosition = this.moveTowards(this.direction);
-    if (this.checkMove(newPosition)) {
+    const possibleMove = this.checkMove(newPosition);
+    if (possibleMove) {
       this.position = newPosition;
-      return true;
+      return possibleMove;
     }
-    return false;
+    return possibleMove;
   }
 
   public draw(): void {
-    this.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
-    this.ctx.fillRect(this.position.posX, this.position.posY, 10, 10);
+    this.ctx.clearRect(0, 0, this.canvasSizeinPx.width, this.canvasSizeinPx.height);
+    this.ctx.fillRect(this.position.posX * this.blockSize, this.position.posY * this.blockSize, this.blockSize, this.blockSize);
   }
 
   public changeDirection(key: Keys): void {
+    if (!Object.values(Keys).includes(key)) {
+      return;
+    }
     this.direction = key;
   }
 
@@ -147,9 +160,9 @@ class Game {
 
   private checkMove(position: Position): boolean {
     if (
-      this.canvasSize.height < position.posY + this.step ||
+      this.canvasSizeInBlocks.height < position.posY + this.step ||
       position.posY < 0 ||
-      this.canvasSize.width < position.posX + this.step ||
+      this.canvasSizeInBlocks.width < position.posX + this.step ||
       position.posX < 0
     ) {
       return false;

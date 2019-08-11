@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.057a2554.chunk.css",
-    "main.js": "/static/js/main.f1f770d5.chunk.js",
-    "main.js.map": "/static/js/main.f1f770d5.chunk.js.map",
-    "runtime~main.js": "/static/js/runtime~main.763bf721.js",
-    "runtime~main.js.map": "/static/js/runtime~main.763bf721.js.map",
-    "static/js/2.ed3a2b33.chunk.js": "/static/js/2.ed3a2b33.chunk.js",
-    "static/js/2.ed3a2b33.chunk.js.map": "/static/js/2.ed3a2b33.chunk.js.map",
-    "index.html": "/index.html",
-    "precache-manifest.1d4c16054e07f9ff857e6ed4becb414b.js": "/precache-manifest.1d4c16054e07f9ff857e6ed4becb414b.js",
-    "service-worker.js": "/service-worker.js",
-    "static/css/main.057a2554.chunk.css.map": "/static/css/main.057a2554.chunk.css.map"
+    "main.css": "/worm/static/css/main.057a2554.chunk.css",
+    "main.js": "/worm/static/js/main.3e3813bf.chunk.js",
+    "main.js.map": "/worm/static/js/main.3e3813bf.chunk.js.map",
+    "runtime~main.js": "/worm/static/js/runtime~main.d9a2ab01.js",
+    "runtime~main.js.map": "/worm/static/js/runtime~main.d9a2ab01.js.map",
+    "static/js/2.ed3a2b33.chunk.js": "/worm/static/js/2.ed3a2b33.chunk.js",
+    "static/js/2.ed3a2b33.chunk.js.map": "/worm/static/js/2.ed3a2b33.chunk.js.map",
+    "index.html": "/worm/index.html",
+    "precache-manifest.ec5c24f1b7897857359ef5863964f219.js": "/worm/precache-manifest.ec5c24f1b7897857359ef5863964f219.js",
+    "service-worker.js": "/worm/service-worker.js",
+    "static/css/main.057a2554.chunk.css.map": "/worm/static/css/main.057a2554.chunk.css.map"
   }
 }

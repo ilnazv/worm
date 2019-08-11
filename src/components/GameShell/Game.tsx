@@ -3,7 +3,7 @@ import { Worm, CanvasSize, positionsEqual, Keys, Position, getRandomPosition } f
 export class Game {
   private intervalId?: NodeJS.Timeout;
   private tick = 0;
-  private fps = 10;
+  private fps = 50;
   private snacks: Position[] = [];
 
   private worms: Worm[] = [];
@@ -65,6 +65,9 @@ export class Game {
       }
     }
     this.draw();
+    if (this.worms.filter(x => !x.dead).length <= 1) {
+      this.stop();
+    }
   }
 
   private async checkSnack(worm: Worm, index: number): Promise<void> {
@@ -90,14 +93,20 @@ export class Game {
 
   public draw(): void {
     this.ctx.clearRect(0, 0, this.canvasSizeinPx.width, this.canvasSizeinPx.height);
-    for (let wI = 0; wI < this.worms.length; wI++) {
-      const worm = this.worms[wI];
-      for (let index = 0; index < worm.body.length; index++) {
-        const element = worm.body[index];
-        this.ctx.fillStyle = worm.dead ? "red" : "black";
-        this.ctx.fillRect(element.posX * this.blockSize, element.posY * this.blockSize, this.blockSize, this.blockSize);
-      }
-    }
+    this.worms
+      .filter(x => !x.dead)
+      .forEach(worm => {
+        for (let index = 0; index < worm.body.length; index++) {
+          const element = worm.body[index];
+          this.ctx.fillStyle = "black";
+          this.ctx.fillRect(
+            element.posX * this.blockSize,
+            element.posY * this.blockSize,
+            this.blockSize,
+            this.blockSize
+          );
+        }
+      });
     for (let sI = 0; sI < this.snacks.length; sI++) {
       const snack = this.snacks[sI];
       this.ctx.fillStyle = "green";

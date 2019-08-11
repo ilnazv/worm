@@ -13,9 +13,7 @@ export default class GameShell extends React.Component<
   GameShellProps,
   { tick: number }
 > {
-  private game?: Game;
   private canvasRef: React.RefObject<HTMLCanvasElement>;
-  private ctx?: CanvasRenderingContext2D;
 
   constructor(props: GameShellProps) {
     super(props);
@@ -28,15 +26,13 @@ export default class GameShell extends React.Component<
 
   componentDidMount(): void {
     const canvas = this.canvasRef.current as HTMLCanvasElement;
-    this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    this.ctx.fillStyle = "green";
-    this.game = new Game(this.ctx, this.props.canvasSize, 50);
-    this.game.start();
-    window.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (this.game) {
-        this.game.handleKey(event.keyCode);
-      }
-    });
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    ctx.fillStyle = "green";
+    const game = new Game(ctx, this.props.canvasSize, 5, 100, 100);
+    game.start(true);
+    window.addEventListener("keydown", (event: KeyboardEvent) =>
+      game.handleKey(event.keyCode)
+    );
   }
 
   public render(): JSX.Element {
@@ -58,7 +54,7 @@ interface Position {
 
 const positionsEqual = (left: Position, right: Position): boolean => {
   return left.posX === right.posX && left.posY === right.posY;
-}
+};
 
 export enum Keys {
   LEFT = 37,
@@ -68,31 +64,43 @@ export enum Keys {
   SPACE = 32
 }
 
-class Game {
-  private intervalId?: NodeJS.Timeout;
-  private tick = 0;
-  private fps = 5;
-  private direction: Keys = Keys.DOWN;
-  private wormSize = 1;
-  private wormBody: Position[] = [];
-  private snackPosition?: Position;
-
-  private _position: Position = {
+class Worm {
+  private _headPosition: Position = {
     posX: 0,
     posY: 0
   };
 
-  private get wormHeadPosition(): Position {
-    return this._position;
+  public get headPosition(): Position {
+    return this._headPosition;
   }
 
-  private set wormHeadPosition(value: Position) {
-    if (this.wormBody.length >= this.wormSize) {
-      this.wormBody.shift();
+  public set headPosition(value: Position) {
+    if (this.body.length >= this.size) {
+      this.body.shift();
     }
-    this.wormBody.push(value);
-    this._position = value;
+    this.body.push(value);
+    this._headPosition = value;
   }
+
+  public body: Position[] = [];
+
+  constructor(
+    headPosition: Position = { posX: 0, posY: 0 },
+    public size: number = 3,
+    public direction: Keys = Keys.DOWN
+  ) {
+    this.headPosition = headPosition;
+    this.body.push(this.headPosition);
+  }
+}
+
+class Game {
+  private intervalId?: NodeJS.Timeout;
+  private tick = 0;
+  private fps = 50;
+  private snacks: Position[] = [];
+
+  private worms: Worm[] = [];
 
   private step = 1;
 
@@ -106,26 +114,43 @@ class Game {
   constructor(
     private ctx: CanvasRenderingContext2D,
     private canvasSizeinPx: CanvasSize,
-    private blockSize = 100
+    private blockSize = 100,
+    wormsNumber = 1,
+    snacksNumber = 1
   ) {
-    this.wormBody.push(this.wormHeadPosition);
-    this.setSnackPosition();
+    for (let index = 0; index < wormsNumber; index++) {
+      this.worms.push(new Worm());
+    }
+    this.initSnacks(snacksNumber);
   }
 
-  private setSnackPosition(): void {
-    let newSnackPosition = this.wormHeadPosition;
-    while (this.wormBody.some(x => positionsEqual(x, newSnackPosition))) {
+  private async initSnacks(snacksNumber: number): Promise<void> {
+    for (let index = 0; index < snacksNumber; index++) {
+      this.snacks.push(await this.setSnackPosition());
+    }
+  }
+
+  private async setSnackPosition(): Promise<Position> {
+    let newSnackPosition = {
+      posX: Math.floor(Math.random() * this.canvasSizeInBlocks.width),
+      posY: Math.floor(Math.random() * this.canvasSizeInBlocks.height)
+    };
+    while (
+      this.worms.some(x =>
+        x.body.some(y => positionsEqual(y, newSnackPosition))
+      )
+    ) {
       newSnackPosition = {
         posX: Math.floor(Math.random() * this.canvasSizeInBlocks.width),
         posY: Math.floor(Math.random() * this.canvasSizeInBlocks.height)
-      }
+      };
     }
-    this.snackPosition = newSnackPosition;
+    return newSnackPosition;
   }
 
-  public start(): void {
+  public start(random: boolean = false): void {
     this.intervalId = setInterval(() => {
-      this.run();
+      this.run(random);
     }, 1000 / this.fps);
   }
 
@@ -135,29 +160,35 @@ class Game {
     }
   }
 
-  private run(): void {
+  private run(random: boolean): void {
     this.tick++;
-    if (this.move()) {
-      this.draw();
+    for (let index = 0; index < this.worms.length; index++) {
+      const worm = this.worms[index];
+      this.move(worm);
+      if (random) {
+        const key = Keys.LEFT + Math.floor(Math.random() * 4);
+        this.changeDirection(key, worm);
+      }
     }
-    this.checkSnack();
+    this.draw();
   }
 
-  private checkSnack(): void {
-    const wormApproachedSnack =
-      this.snackPosition &&
-      positionsEqual(this.snackPosition, this.wormHeadPosition)
+  private async checkSnack(worm: Worm, index: number): Promise<void> {
+    const wormApproachedSnack = positionsEqual(this.snacks[index], worm.headPosition);
     if (wormApproachedSnack) {
-      this.wormSize++;
-      this.setSnackPosition();
+      worm.size++;
+      this.snacks[index] = await this.setSnackPosition();
     }
   }
 
-  private move(): boolean {
-    const newPosition = this.moveTowards(this.direction);
+  private move(worm: Worm): boolean {
+    const newPosition = this.moveTowards(worm.direction, worm);
     const possibleMove = this.checkMove(newPosition);
     if (possibleMove) {
-      this.wormHeadPosition = newPosition;
+      for (let index = 0; index < this.snacks.length; index++) {
+        this.checkSnack(worm, index);
+      }
+      worm.headPosition = newPosition;
       return possibleMove;
     }
     return possibleMove;
@@ -170,19 +201,25 @@ class Game {
       this.canvasSizeinPx.width,
       this.canvasSizeinPx.height
     );
-    for (let index = 0; index < this.wormBody.length; index++) {
-      const element = this.wormBody[index];
-      this.ctx.fillRect(
-        element.posX * this.blockSize,
-        element.posY * this.blockSize,
-        this.blockSize,
-        this.blockSize
-      );
+    for (let wI = 0; wI < this.worms.length; wI++) {
+      const worm = this.worms[wI];
+      for (let index = 0; index < worm.body.length; index++) {
+        const element = worm.body[index];
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(
+          element.posX * this.blockSize,
+          element.posY * this.blockSize,
+          this.blockSize,
+          this.blockSize
+        );
+      }      
     }
-    if (this.snackPosition) {
+    for (let sI = 0; sI < this.snacks.length; sI++) {
+      const snack = this.snacks[sI];
+      this.ctx.fillStyle = "green";
       this.ctx.fillRect(
-        this.snackPosition.posX * this.blockSize,
-        this.snackPosition.posY * this.blockSize,
+        snack.posX * this.blockSize,
+        snack.posY * this.blockSize,
         this.blockSize,
         this.blockSize
       );
@@ -193,53 +230,53 @@ class Game {
     if (!Object.values(Keys).includes(key)) {
       return;
     }
-    this.changeDirection(key);
+    this.changeDirection(key, this.worms[0]);
     if (key === Keys.SPACE) {
-      this.wormSize++;
+      this.worms[0].size++;
     }
   }
 
-  private changeDirection(key: Keys): void {
-    if (this.direction === Keys.DOWN && key === Keys.UP) {
+  private changeDirection(key: Keys, worm: Worm): void {
+    if (worm.direction === Keys.DOWN && key === Keys.UP) {
       return;
     }
-    if (this.direction === Keys.UP && key === Keys.DOWN) {
+    if (worm.direction === Keys.UP && key === Keys.DOWN) {
       return;
     }
-    if (this.direction === Keys.LEFT && key === Keys.RIGHT) {
+    if (worm.direction === Keys.LEFT && key === Keys.RIGHT) {
       return;
     }
-    if (this.direction === Keys.RIGHT && key === Keys.LEFT) {
+    if (worm.direction === Keys.RIGHT && key === Keys.LEFT) {
       return;
     }
-    this.direction = key;
+    worm.direction = key;
   }
 
-  private moveTowards(key: Keys): Position {
+  private moveTowards(key: Keys, worm: Worm): Position {
     switch (key) {
       case Keys.UP:
         return {
-          posY: this.wormHeadPosition.posY - this.step,
-          posX: this.wormHeadPosition.posX
+          posY: worm.headPosition.posY - this.step,
+          posX: worm.headPosition.posX
         };
       case Keys.DOWN:
         return {
-          posY: this.wormHeadPosition.posY + this.step,
-          posX: this.wormHeadPosition.posX
+          posY: worm.headPosition.posY + this.step,
+          posX: worm.headPosition.posX
         };
       case Keys.LEFT:
         return {
-          posY: this.wormHeadPosition.posY,
-          posX: this.wormHeadPosition.posX - this.step
+          posY: worm.headPosition.posY,
+          posX: worm.headPosition.posX - this.step
         };
       case Keys.RIGHT:
         return {
-          posY: this.wormHeadPosition.posY,
-          posX: this.wormHeadPosition.posX + this.step
+          posY: worm.headPosition.posY,
+          posX: worm.headPosition.posX + this.step
         };
       default:
         console.log("no action assigned");
-        return this.wormHeadPosition;
+        return worm.headPosition;
     }
   }
 

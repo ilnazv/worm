@@ -104,8 +104,8 @@ export class Game {
     if (possibleMove) {
       for (let index = 0; index < this.snacks.length; index++) {
         this.checkSnack(worm, index, newPosition);
-        this.checkAnotherWorm(worm, newPosition);
       }
+      this.checkAnotherWorm(worm, newPosition);
       worm.headPosition = newPosition;
       return possibleMove;
     }

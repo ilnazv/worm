@@ -37,14 +37,18 @@ export class Worm {
   public body: Position[] = [];
 
   public increaseSize(value: number = 1): void {
-    this.size = this.size + value;
+    this._size = this.size + value;
   }
 
   public dead = false;
 
+  public get size(): number {
+    return this._size;
+  }
+
   constructor(
     private _headPosition: Position = { posX: 0, posY: 0 },
-    private size: number = 3,
+    private _size: number = 3,
     public direction: Keys = Keys.DOWN
   ) {
     this.body.push(this.headPosition);

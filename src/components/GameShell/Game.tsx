@@ -183,12 +183,12 @@ export class Game {
   }
 
   private checkNextMove(headPosition: Position, worm: Worm): boolean {
-    if (
+    const outOfCanvas =
       CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).height < headPosition.posY + this.step ||
       headPosition.posY < 0 ||
       CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize).width < headPosition.posX + this.step ||
-      headPosition.posX < 0
-    ) {
+      headPosition.posX < 0;
+    if (outOfCanvas) {
       return false;
     }
     const wormApproachedHimself = worm.body.some(x => positionsEqual(x, headPosition));

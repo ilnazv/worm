@@ -1,9 +1,9 @@
 import React from "react";
 import { Game } from "./Game";
-import { CanvasSize } from "./Models";
+import { ISize } from "./Models";
 
 interface GameShellProps {
-  canvasSize: CanvasSize;
+  canvasSize: ISize;
 }
 
 export default class GameShell extends React.Component<

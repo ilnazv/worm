@@ -1,4 +1,4 @@
-import { Worm, CanvasSize, Keys, Position, Snack } from "./Models";
+import { Worm, Canvas, Keys, Position, Snack, ISize, ColoredDot } from "./Models";
 
 export class Game {
   private intervalId?: NodeJS.Timeout;
@@ -7,21 +7,19 @@ export class Game {
   private worms: Worm[] = [];
   private step = 1;
   private survivorMode = false;
-
-  private get canvasSizeInBlocks(): CanvasSize {
-    return CanvasSize.canvasSizeInBlocks(this.canvasSizeinPx, this.blockSize);
-  }
+  private canvas: Canvas;
 
   constructor(
-    private ctx: CanvasRenderingContext2D,
-    private canvasSizeinPx: CanvasSize,
+    ctx: CanvasRenderingContext2D,
+    canvasSizeinPx: ISize,
     private fps = 50,
     private blockSize = 100,
     wormsNumber = 1,
     snacksNumber = 1
   ) {
+    this.canvas = new Canvas(canvasSizeinPx.width, canvasSizeinPx.height, this.blockSize, ctx);
     for (let index = 0; index < wormsNumber; index++) {
-      this.worms.push(new Worm(Position.getRandomPosition(this.canvasSizeInBlocks)));
+      this.worms.push(new Worm(this.canvas.getRandomPosition()));
     }
     this.initSnacks(snacksNumber);
     this.survivorMode = wormsNumber > 1;
@@ -29,7 +27,7 @@ export class Game {
 
   private initSnacks(snacksNumber: number): void {
     for (let index = 0; index < snacksNumber; index++) {
-      this.snacks.push(Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvasSizeInBlocks));
+      this.snacks.push(Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvas));
     }
   }
 
@@ -73,11 +71,30 @@ export class Game {
     }
   }
 
+  private draw(): void {
+    const dots: ColoredDot[] = [];
+    this.worms
+      .filter(x => !x.dead)
+      .forEach(worm => {
+        for (let index = 0; index < worm.body.length; index++) {
+          const element = worm.body[index];
+          const color = index === worm.body.length - 1 ? "red" : worm.dead ? "burlywood" : "black";
+          dots.push(new ColoredDot(element.posX, element.posY, color));
+        }
+      });
+    for (let sI = 0; sI < this.snacks.length; sI++) {
+      const snack = this.snacks[sI];
+      const color = "green";
+      dots.push(new ColoredDot(snack.posX, snack.posY, color));
+    }
+    this.canvas.draw(dots);
+  }
+
   private checkSnack(worm: Worm, index: number, headPosition: Position): void {
     const wormApproachedSnack = this.snacks[index].positionsEqual(headPosition);
     if (wormApproachedSnack) {
       worm.increaseSize();
-      this.snacks[index] = Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvasSizeInBlocks);
+      this.snacks[index] = Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvas);
     }
   }
 
@@ -95,29 +112,6 @@ export class Game {
     return possibleMove;
   }
 
-  public draw(): void {
-    this.ctx.clearRect(0, 0, this.canvasSizeinPx.width, this.canvasSizeinPx.height);
-    this.worms
-      .filter(x => !x.dead)
-      .forEach(worm => {
-        for (let index = 0; index < worm.body.length; index++) {
-          const element = worm.body[index];
-          this.ctx.fillStyle = index === worm.body.length - 1 ? "red" : worm.dead ? "burlywood" : "black";
-          this.ctx.fillRect(
-            element.posX * this.blockSize,
-            element.posY * this.blockSize,
-            this.blockSize,
-            this.blockSize
-          );
-        }
-      });
-    for (let sI = 0; sI < this.snacks.length; sI++) {
-      const snack = this.snacks[sI];
-      this.ctx.fillStyle = "green";
-      this.ctx.fillRect(snack.posX * this.blockSize, snack.posY * this.blockSize, this.blockSize, this.blockSize);
-    }
-  }
-
   public handleKey(key: Keys): void {
     if (!Object.values(Keys).includes(key)) {
       return;
@@ -126,12 +120,7 @@ export class Game {
   }
 
   private checkNextMove(headPosition: Position, worm: Worm): boolean {
-    const outOfCanvas =
-      this.canvasSizeInBlocks.height < headPosition.posY + this.step ||
-      headPosition.posY < 0 ||
-      this.canvasSizeInBlocks.width < headPosition.posX + this.step ||
-      headPosition.posX < 0;
-    if (outOfCanvas) {
+    if (this.canvas.outOfCanvas(headPosition)) {
       return false;
     }
     const wormApproachedHimself = worm.body.some(x => x.positionsEqual(headPosition));

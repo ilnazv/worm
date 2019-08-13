@@ -4,13 +4,6 @@ export class Position {
   public positionsEqual = (right: Position): boolean => {
     return this.posX === right.posX && this.posY === right.posY;
   };
-
-  public static getRandomPosition(canvasSizeInBlocks: CanvasSize): Position {
-    return new this(
-      Math.floor(Math.random() * canvasSizeInBlocks.width),
-      Math.floor(Math.random() * canvasSizeInBlocks.height)
-    );
-  }
 }
 
 export enum Keys {
@@ -98,22 +91,59 @@ export class Worm {
   }
 }
 
-export class CanvasSize {
-  constructor(public width: number, public height: number) {}
+export interface ISize {
+  width: number;
+  height: number;
+}
 
-  public static canvasSizeInBlocks(canvas: CanvasSize, blockSize: number): CanvasSize {
-    return {
-      width: canvas.width / blockSize,
-      height: canvas.height / blockSize
-    };
+export class ColoredDot extends Position {
+  constructor(posX: number, posY: number, public color: string) {
+    super(posX, posY);
+  }
+}
+
+export class Canvas {
+  private size: ISize = { width: 0, height: 0 };
+
+  constructor(width: number, height: number, private _blockSize: number = 1, private ctx: CanvasRenderingContext2D) {
+    this.size = { width, height };
+  }
+
+  public getRandomPosition(): Position {
+    return new Position(
+      Math.floor(Math.random() * this.canvasSizeInBlocks.width),
+      Math.floor(Math.random() * this.canvasSizeInBlocks.height)
+    );
+  }
+
+  public get canvasSizeInBlocks(): ISize {
+    return { width: this.size.width / this._blockSize, height: this.size.height / this._blockSize };
+  }
+
+  public outOfCanvas(position: Position): boolean {
+    return (
+      this.canvasSizeInBlocks.height < position.posY ||
+      position.posY < 0 ||
+      this.canvasSizeInBlocks.width < position.posX ||
+      position.posX < 0
+    );
+  }
+
+  public draw(dots: ColoredDot[]): void {
+    this.ctx.clearRect(0, 0, this.size.width, this.size.height);
+    for (let index = 0; index < dots.length; index++) {
+      const dot = dots[index];
+      this.ctx.fillStyle = dot.color;
+      this.ctx.fillRect(dot.posX * this._blockSize, dot.posY * this._blockSize, this._blockSize, this._blockSize);
+    }
   }
 }
 
 export class Snack extends Position {
-  public static newRandomly(occupiedPosition: Position[], _canvasSizeinBlocks: CanvasSize): Snack {
-    let newSnackPosition = Position.getRandomPosition(_canvasSizeinBlocks);
+  public static newRandomly(occupiedPosition: Position[], canvas: Canvas): Snack {
+    let newSnackPosition = canvas.getRandomPosition();
     while (occupiedPosition.some(y => y.positionsEqual(newSnackPosition))) {
-      newSnackPosition = Position.getRandomPosition(_canvasSizeinBlocks);
+      newSnackPosition = canvas.getRandomPosition();
     }
     const { posX, posY } = newSnackPosition;
     return new this(posX, posY);

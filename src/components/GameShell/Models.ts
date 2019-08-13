@@ -1,18 +1,17 @@
-export interface Position {
-  posX: number;
-  posY: number;
-}
+export class Position {
+  constructor(public posX: number, public posY: number) {}
 
-export const getRandomPosition = (canvasSizeInBlocks: CanvasSize): Position => {
-  return {
-    posX: Math.floor(Math.random() * canvasSizeInBlocks.width),
-    posY: Math.floor(Math.random() * canvasSizeInBlocks.height)
+  public positionsEqual = (right: Position): boolean => {
+    return this.posX === right.posX && this.posY === right.posY;
   };
-};
 
-export const positionsEqual = (left: Position, right: Position): boolean => {
-  return left.posX === right.posX && left.posY === right.posY;
-};
+  public static getRandomPosition(canvasSizeInBlocks: CanvasSize): Position {
+    return new this(
+      Math.floor(Math.random() * canvasSizeInBlocks.width),
+      Math.floor(Math.random() * canvasSizeInBlocks.height)
+    );
+  }
+}
 
 export enum Keys {
   LEFT = 37,
@@ -65,25 +64,13 @@ export class Worm {
   public nextPosition(): Position {
     switch (this.direction) {
       case Keys.UP:
-        return {
-          posX: this.headPosition.posX,
-          posY: this.headPosition.posY - this._step
-        };
+        return new Position(this.headPosition.posX, this.headPosition.posY - this._step);
       case Keys.DOWN:
-        return {
-          posX: this.headPosition.posX,
-          posY: this.headPosition.posY + this._step
-        };
+        return new Position(this.headPosition.posX, this.headPosition.posY + this._step);
       case Keys.LEFT:
-        return {
-          posX: this.headPosition.posX - this._step,
-          posY: this.headPosition.posY
-        };
+        return new Position(this.headPosition.posX - this._step, this.headPosition.posY);
       case Keys.RIGHT:
-        return {
-          posX: this.headPosition.posX + this._step,
-          posY: this.headPosition.posY
-        };
+        return new Position(this.headPosition.posX + this._step, this.headPosition.posY);
       default:
         console.log("no action handler for key: ", this.direction);
         return this.headPosition;
@@ -93,9 +80,7 @@ export class Worm {
   public checkAnotherWorm(headPosition: Position, worms: Worm[]): void {
     const anotherWorm = worms.find(
       x =>
-        !positionsEqual(x.headPosition, this.headPosition) &&
-        !x.dead &&
-        x.body.some(y => positionsEqual(y, headPosition))
+        !x.headPosition.positionsEqual(this.headPosition) && !x.dead && x.body.some(y => y.positionsEqual(headPosition))
     );
     if (anotherWorm) {
       anotherWorm.dead = true;
@@ -104,7 +89,7 @@ export class Worm {
   }
 
   constructor(
-    private _headPosition: Position = { posX: 0, posY: 0 },
+    private _headPosition: Position = new Position(0, 0),
     private _size: number = 3,
     private _direction: Keys = Keys.DOWN,
     private _step: number = 1
@@ -124,21 +109,17 @@ export class CanvasSize {
   }
 }
 
-export class Snack implements Position {
-  public posX: number;
-  public posY: number;
-
-  public static newRandomly(occupiedPosition: Position[], _canvasSizeinBlocks: CanvasSize) {
-    let newSnackPosition = getRandomPosition(_canvasSizeinBlocks);
-    while (occupiedPosition.some(y => positionsEqual(y, newSnackPosition))) {
-      newSnackPosition = getRandomPosition(_canvasSizeinBlocks);
+export class Snack extends Position {
+  public static newRandomly(occupiedPosition: Position[], _canvasSizeinBlocks: CanvasSize): Snack {
+    let newSnackPosition = Position.getRandomPosition(_canvasSizeinBlocks);
+    while (occupiedPosition.some(y => y.positionsEqual(newSnackPosition))) {
+      newSnackPosition = Position.getRandomPosition(_canvasSizeinBlocks);
     }
     const { posX, posY } = newSnackPosition;
     return new this(posX, posY);
   }
 
   constructor(posX: number, posY: number) {
-    this.posX = posX;
-    this.posY = posY;
+    super(posX, posY);
   }
 }

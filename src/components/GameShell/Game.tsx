@@ -1,9 +1,9 @@
-import { Worm, CanvasSize, positionsEqual, Keys, Position, getRandomPosition, Snack } from "./Models";
+import { Worm, CanvasSize, Keys, Position, Snack } from "./Models";
 
 export class Game {
   private intervalId?: NodeJS.Timeout;
   private tick = 0;
-  private snacks: Position[] = [];
+  private snacks: Snack[] = [];
 
   private worms: Worm[] = [];
 
@@ -24,7 +24,7 @@ export class Game {
     snacksNumber = 1
   ) {
     for (let index = 0; index < wormsNumber; index++) {
-      this.worms.push(new Worm(getRandomPosition(this.canvasSizeInBlocks)));
+      this.worms.push(new Worm(Position.getRandomPosition(this.canvasSizeInBlocks)));
     }
     this.initSnacks(snacksNumber);
     this.survivorMode = wormsNumber > 1;
@@ -77,7 +77,7 @@ export class Game {
   }
 
   private checkSnack(worm: Worm, index: number, headPosition: Position): void {
-    const wormApproachedSnack = positionsEqual(this.snacks[index], headPosition);
+    const wormApproachedSnack = this.snacks[index].positionsEqual(headPosition);
     if (wormApproachedSnack) {
       worm.increaseSize();
       this.snacks[index] = Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvasSizeInBlocks);
@@ -137,15 +137,13 @@ export class Game {
     if (outOfCanvas) {
       return false;
     }
-    const wormApproachedHimself = worm.body.some(x => positionsEqual(x, headPosition));
+    const wormApproachedHimself = worm.body.some(x => x.positionsEqual(headPosition));
     if (wormApproachedHimself) {
       return false;
     }
     const anotherWorm = this.worms.find(
       x =>
-        !positionsEqual(x.headPosition, worm.headPosition) &&
-        !x.dead &&
-        x.body.some(y => positionsEqual(y, headPosition))
+        !x.headPosition.positionsEqual(worm.headPosition) && !x.dead && x.body.some(y => y.positionsEqual(headPosition))
     );
     if (anotherWorm) {
       return anotherWorm.size < worm.size;

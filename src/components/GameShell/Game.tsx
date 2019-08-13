@@ -30,7 +30,7 @@ export class Game {
     this.survivorMode = wormsNumber > 1;
   }
 
-  private async initSnacks(snacksNumber: number): Promise<void> {
+  private initSnacks(snacksNumber: number): void {
     for (let index = 0; index < snacksNumber; index++) {
       this.snacks.push(Snack.newRandomly(this.worms.flatMap(x => x.body), this.canvasSizeInBlocks));
     }
@@ -76,7 +76,7 @@ export class Game {
     }
   }
 
-  private async checkSnack(worm: Worm, index: number, headPosition: Position): Promise<void> {
+  private checkSnack(worm: Worm, index: number, headPosition: Position): void {
     const wormApproachedSnack = positionsEqual(this.snacks[index], headPosition);
     if (wormApproachedSnack) {
       worm.increaseSize();

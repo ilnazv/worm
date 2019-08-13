@@ -118,8 +118,4 @@ export class Snack extends Position {
     const { posX, posY } = newSnackPosition;
     return new this(posX, posY);
   }
-
-  constructor(posX: number, posY: number) {
-    super(posX, posY);
-  }
 }

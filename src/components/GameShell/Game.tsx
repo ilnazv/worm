@@ -4,11 +4,8 @@ export class Game {
   private intervalId?: NodeJS.Timeout;
   private tick = 0;
   private snacks: Snack[] = [];
-
   private worms: Worm[] = [];
-
   private step = 1;
-
   private survivorMode = false;
 
   private get canvasSizeInBlocks(): CanvasSize {

@@ -5,7 +5,6 @@ export class Game {
   private tick = 0;
   private snacks: Snack[] = [];
   private worms: Worm[] = [];
-  private step = 1;
   private survivorMode = false;
   private canvas: Canvas;
 
@@ -48,20 +47,22 @@ export class Game {
     this.worms
       .filter(x => !x.dead)
       .forEach(worm => {
-        let possibleMove = this.move(worm);
         if (random) {
-          let tryCounter = 0;
-          while (!possibleMove) {
-            const key = Keys.LEFT + Math.floor(Math.random() * 4);
-            worm.direction = key;
-            possibleMove = this.move(worm);
-            tryCounter++;
-            if (tryCounter >= 100) {
+          const possibleDirections: number[] = [Keys.DOWN, Keys.LEFT, Keys.RIGHT, Keys.UP];
+          (window as any).worm = worm;
+          let possibleMove = false;
+          let key: Keys = Keys.DOWN;
+          do {
+            if (possibleDirections.length === 0) {
               worm.dead = true;
               possibleMove = true;
+            } else {
+              const index = Math.floor(Math.random() * possibleDirections.length);
+              key = possibleDirections[index];
+              possibleMove = this.move(worm, key);
+              possibleDirections.splice(index, 1);
             }
-          }
-          const key = Keys.LEFT + Math.floor(Math.random() * 4);
+          } while (!possibleMove); 
           worm.direction = key;
         }
       });
@@ -98,8 +99,8 @@ export class Game {
     }
   }
 
-  private move(worm: Worm): boolean {
-    const newPosition = worm.nextPosition();
+  private move(worm: Worm, direction: Keys): boolean {
+    const newPosition = worm.nextPosition(direction);
     const possibleMove = this.checkNextMove(newPosition, worm);
     if (possibleMove) {
       for (let index = 0; index < this.snacks.length; index++) {
@@ -132,7 +133,7 @@ export class Game {
         !x.headPosition.positionsEqual(worm.headPosition) && !x.dead && x.body.some(y => y.positionsEqual(headPosition))
     );
     if (anotherWorm) {
-      return anotherWorm.size < worm.size;
+      return anotherWorm.size <= worm.size;
     }
     return true;
   }

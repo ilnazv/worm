@@ -54,8 +54,8 @@ export class Worm {
     }
   }
 
-  public nextPosition(): Position {
-    switch (this.direction) {
+  public nextPosition(direction: Keys): Position {
+    switch (direction) {
       case Keys.UP:
         return new Position(this.headPosition.posX, this.headPosition.posY - this._step);
       case Keys.DOWN:
@@ -65,7 +65,7 @@ export class Worm {
       case Keys.RIGHT:
         return new Position(this.headPosition.posX + this._step, this.headPosition.posY);
       default:
-        console.log("no action handler for key: ", this.direction);
+        console.log("no action handler for key: ", direction);
         return this.headPosition;
     }
   }

@@ -1,4 +1,7 @@
-import { Worm, Canvas, Keys, Position, Snack, ISize, ColoredDot } from "./Models";
+import { Keys, Position, ISize, ColoredDot } from "./Models";
+import { Worm } from "./Worm";
+import { Snack } from "./Snack";
+import { Canvas } from "./Canvas";
 
 export class Game {
   private intervalId?: NodeJS.Timeout;
@@ -7,6 +10,8 @@ export class Game {
   private worms: Worm[] = [];
   private survivorMode = false;
   private canvas: Canvas;
+
+  private extraDots: Position[] = [];
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -54,8 +59,10 @@ export class Game {
           let key: Keys = Keys.DOWN;
           do {
             if (possibleDirections.length === 0) {
-              worm.dead = true;
+              // worm.dead = true;
               possibleMove = true;
+              this.extraDots.push(...worm.leftPositions);
+              this.extraDots.push(...worm.rightPositions);
             } else {
               const index = Math.floor(Math.random() * possibleDirections.length);
               key = possibleDirections[index];
@@ -124,14 +131,11 @@ export class Game {
     if (this.canvas.outOfCanvas(headPosition)) {
       return false;
     }
-    const wormApproachedHimself = worm.body.some(x => x.positionsEqual(headPosition));
+    const wormApproachedHimself = worm.checkHimself(headPosition);
     if (wormApproachedHimself) {
       return false;
     }
-    const anotherWorm = this.worms.find(
-      x =>
-        !x.headPosition.positionsEqual(worm.headPosition) && !x.dead && x.body.some(y => y.positionsEqual(headPosition))
-    );
+    const anotherWorm = worm.approachedAnotherWorm(this.worms, headPosition);
     if (anotherWorm) {
       return anotherWorm.size <= worm.size;
     }

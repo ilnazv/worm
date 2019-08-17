@@ -59,7 +59,7 @@ export class Game {
           let key: Keys = Keys.DOWN;
           do {
             if (possibleDirections.length === 0) {
-              // worm.dead = true;
+              worm.dead = true;
               possibleMove = true;
               this.extraDots.push(...worm.leftPositions);
               this.extraDots.push(...worm.rightPositions);

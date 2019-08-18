@@ -135,7 +135,7 @@ export class Game {
     if (this.canvas.outOfCanvas(headPosition)) {
       return false;
     }
-    const wormApproachedHimself = worm.checkHimself(headPosition);
+    const wormApproachedHimself = worm.checkHimself(headPosition, this.canvas.canvasSizeInBlocks);
     if (wormApproachedHimself) {
       return false;
     }

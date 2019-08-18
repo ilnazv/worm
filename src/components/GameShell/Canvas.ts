@@ -15,7 +15,7 @@ export class Canvas {
   }
 
   public get canvasSizeInBlocks(): ISize {
-    return { width: this.size.width / this._blockSize, height: this.size.height / this._blockSize };
+    return { width: Math.floor(this.size.width / this._blockSize), height: Math.floor(this.size.height / this._blockSize) };
   }
 
   public outOfCanvas(position: Position): boolean {

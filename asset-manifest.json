@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/worm/static/css/main.057a2554.chunk.css",
-    "main.js": "/worm/static/js/main.e4139570.chunk.js",
-    "main.js.map": "/worm/static/js/main.e4139570.chunk.js.map",
+    "main.js": "/worm/static/js/main.f2359de8.chunk.js",
+    "main.js.map": "/worm/static/js/main.f2359de8.chunk.js.map",
     "runtime~main.js": "/worm/static/js/runtime~main.d9a2ab01.js",
     "runtime~main.js.map": "/worm/static/js/runtime~main.d9a2ab01.js.map",
     "static/js/2.00996746.chunk.js": "/worm/static/js/2.00996746.chunk.js",
     "static/js/2.00996746.chunk.js.map": "/worm/static/js/2.00996746.chunk.js.map",
     "index.html": "/worm/index.html",
-    "precache-manifest.89f49ab2c076da15d3360eab189dd9e7.js": "/worm/precache-manifest.89f49ab2c076da15d3360eab189dd9e7.js",
+    "precache-manifest.24eb64884148cc06c65c9aaaa3609a99.js": "/worm/precache-manifest.24eb64884148cc06c65c9aaaa3609a99.js",
     "service-worker.js": "/worm/service-worker.js",
     "static/css/main.057a2554.chunk.css.map": "/worm/static/css/main.057a2554.chunk.css.map"
   }

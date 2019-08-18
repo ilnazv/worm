@@ -1,4 +1,4 @@
-import { Keys, Position, ISize, ColoredDot } from "./Models";
+import { Keys, Position, ISize, ColoredDot, ICanvasSize } from "./Models";
 import { Worm } from "./Worm";
 import { Snack } from "./Snack";
 import { Canvas } from "./Canvas";
@@ -15,13 +15,12 @@ export class Game {
 
   constructor(
     ctx: CanvasRenderingContext2D,
-    canvasSizeinPx: ISize,
+    canvasSizeinPx: ICanvasSize,
     private fps = 50,
-    private blockSize = 100,
     wormsNumber = 1,
     snacksNumber = 1
   ) {
-    this.canvas = new Canvas(canvasSizeinPx.width, canvasSizeinPx.height, this.blockSize, ctx);
+    this.canvas = new Canvas(canvasSizeinPx.width, canvasSizeinPx.height, canvasSizeinPx.blockSize, ctx);
     for (let index = 0; index < wormsNumber; index++) {
       this.worms.push(new Worm(this.canvas.getRandomPosition()));
     }

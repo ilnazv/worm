@@ -18,6 +18,10 @@ export interface ISize {
   height: number;
 }
 
+export interface ICanvasSize extends ISize {
+  blockSize: number;
+}
+
 export class ColoredDot extends Position {
   constructor(posX: number, posY: number, public color: string) {
     super(posX, posY);

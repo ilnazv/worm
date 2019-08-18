@@ -87,11 +87,11 @@ export class Game {
           const color = worm.dead ? "burlywood" : "black";
           dots.push(new ColoredDot(element.posX, element.posY, color));
         }
-        dots.push(new ColoredDot(worm.headPosition.posX, worm.headPosition.posY, "red"));
+        dots.push(new ColoredDot(worm.headPosition.posX, worm.headPosition.posY, "#965050"));
       });
     for (let sI = 0; sI < this.snacks.length; sI++) {
       const snack = this.snacks[sI];
-      const color = "green";
+      const color = "#447144";
       dots.push(new ColoredDot(snack.posX, snack.posY, color));
     }
     dots.push(...(this.extraDots.map(x => new ColoredDot(

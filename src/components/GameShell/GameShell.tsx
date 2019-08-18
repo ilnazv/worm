@@ -24,8 +24,7 @@ export default class GameShell extends React.Component<
   componentDidMount(): void {
     const canvas = this.canvasRef.current as HTMLCanvasElement;
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    ctx.fillStyle = "green";
-    const game = new Game(ctx, this.props.canvasSize, 50, 3, 100, 100);
+    const game = new Game(ctx, this.props.canvasSize, 50, 8, 30, 30);
     game.start(true);
     window.addEventListener("keydown", (event: KeyboardEvent) =>
       game.handleKey(event.keyCode)

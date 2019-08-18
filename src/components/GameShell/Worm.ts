@@ -73,32 +73,7 @@ export class Worm {
   }
 
   public checkHimself(headPosition: Position): boolean {
-    const positionBlockedVertically = this.body.some(x => x.positionsEqual(new Position(
-      headPosition.posX,
-      headPosition.posY - 1
-    ))) && this.body.some(x => x.positionsEqual(new Position(
-      headPosition.posX,
-      headPosition.posY + 1
-    )));
-    const positionBlockedHorizontally = this.body.some(x => x.positionsEqual(new Position(
-      headPosition.posX - 1,
-      headPosition.posY
-    ))) && this.body.some(x => x.positionsEqual(new Position(
-      headPosition.posX + 1,
-      headPosition.posY
-    )));
-    const approachedDeadEnd = positionBlockedHorizontally || positionBlockedVertically;
-    return approachedDeadEnd || this.body.some(x => x.positionsEqual(headPosition));
-  }
-
-  public get leftPositions(): Position[] {
-    const mostLeftPosition = this.body.sort((a, b) => a.posX - b.posX)[0];
-    return this.body.filter(x => x.posX === mostLeftPosition.posX);
-  }
-
-  public get rightPositions(): Position[] {
-    const mostRightPosition = this.body.sort((a, b) => b.posX - a.posX)[0];
-    return this.body.filter(x => x.posX === mostRightPosition.posX);
+    return this.body.some(x => x.positionsEqual(headPosition));
   }
 
   constructor(

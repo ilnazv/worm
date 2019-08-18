@@ -61,8 +61,6 @@ export class Game {
             if (possibleDirections.length === 0) {
               worm.dead = true;
               possibleMove = true;
-              this.extraDots.push(...worm.leftPositions);
-              this.extraDots.push(...worm.rightPositions);
             } else {
               const index = Math.floor(Math.random() * possibleDirections.length);
               key = possibleDirections[index];
@@ -86,15 +84,21 @@ export class Game {
       .forEach(worm => {
         for (let index = 0; index < worm.body.length; index++) {
           const element = worm.body[index];
-          const color = index === worm.body.length - 1 ? "red" : worm.dead ? "burlywood" : "black";
+          const color = worm.dead ? "burlywood" : "black";
           dots.push(new ColoredDot(element.posX, element.posY, color));
         }
+        dots.push(new ColoredDot(worm.headPosition.posX, worm.headPosition.posY, "red"));
       });
     for (let sI = 0; sI < this.snacks.length; sI++) {
       const snack = this.snacks[sI];
       const color = "green";
       dots.push(new ColoredDot(snack.posX, snack.posY, color));
     }
+    dots.push(...(this.extraDots.map(x => new ColoredDot(
+      x.posX,
+      x.posY,
+      "blue"
+    ))));
     this.canvas.draw(dots);
   }
 
